@@ -1,0 +1,5 @@
+target("Expr")
+    set_kind("static")
+    add_files("Expr.g4")
+    add_rules("antlr4")
+    add_packages("antlr4")
