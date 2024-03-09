@@ -54,4 +54,6 @@ rule("antlr4")
         end
     end)
 
+add_plugindirs(path.join(os.projectdir(), "plugins"))
+
 includes("test")
