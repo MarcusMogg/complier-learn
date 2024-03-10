@@ -1,5 +1,10 @@
-target("Expr")
+target("libExpr")
     set_kind("static")
     add_files("Expr.g4")
     add_rules("antlr4")
-    add_packages("antlr4")
+    add_packages("antlr4", {public = true})
+
+target("Expr")
+    set_kind("binary")
+    add_files("main.cc")
+    add_deps("libExpr")

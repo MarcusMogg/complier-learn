@@ -1,9 +1,17 @@
 grammar Expr;
-prog: expr EOF;
+
+import ExprLex;
+
+prog: stat+ EOF;
+// parser
+stat:
+	expr NEWLINE # expression
+	//| ID '=' expr NEWLINE 
+	| NEWLINE # blank;
 expr:
-	expr ('*' | '/') expr
-	| expr ('+' | '-') expr
-	| INT
-	| '(' expr ')';
-NEWLINE: [\r\n]+ -> skip;
-INT: [0-9]+;
+	expr op = ('*' | '/') expr		# muldiv
+	| expr op = ('+' | '-') expr	# addsub
+	| INT							# int
+	| ID							# id
+	| ID '=' expr					# assign
+	| '(' expr ')'					# parens;
