@@ -370,4 +370,4 @@ install
 vsxmake*
 
 .antlr/
-*gen_*
+*gen*/

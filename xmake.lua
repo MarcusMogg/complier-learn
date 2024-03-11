@@ -5,34 +5,48 @@ add_requires("antlr4")
 rule("antlr4")
     set_extensions(".g4")
     add_deps("c++")
+    after_load(function (target) 
+        target:set("policy", "build.across_targets_in_parallel", false)
+    end)
     before_buildcmd_file(function (target, batchcmds, sourcefile, opt)
-
         local basename = path.basename(sourcefile)
         local basedir = path.directory(sourcefile)
         -- 优先使用前缀，方便ignore
         local gen_dir = path.join(basedir, "gen_" .. basename)
-        opt = table.join(opt, {
-            outdir = gen_dir,
-            namespace = basename,
-        })
-        
-        -- 有点挫，不难用文件夹，必须指定文件名
+        local gen_opt = {
+            outdir = target:extraconf("rules", "antlr4", "outdir") or gen_dir,
+            namespace = target:extraconf("rules", "antlr4", "namespace") or basename,
+            visitor = target:extraconf("rules", "antlr4", "visitor") or true,
+            listener = target:extraconf("rules", "antlr4", "listener") or true,
+        }
+        print(target:extraconf("rules", "antlr4", "outdir"))
+        -- 有点挫，不能用文件夹，必须指定文件名
         local gen_array = {
             "Lexer.cpp", 
-            "Parser.cpp", 
-            "BaseListener.cpp",
-            "Listener.cpp",
-            "BaseVisitor.cpp",
-            "Visitor.cpp",
+            "Parser.cpp",
         }
+
+        if gen_opt.listener then 
+            table.join2(gen_array,{
+                "BaseListener.cpp",
+                "Listener.cpp",
+            })
+        end
+        if gen_opt.visitor then 
+            table.join2(gen_array,{
+                "BaseVisitor.cpp",
+                "Visitor.cpp",
+            })
+        end
         
         batchcmds:show_progress(opt.progress, "${color.build.object}antlr4 %s", sourcefile)
         batchcmds:execv("antlr4", {
                 "-Dlanguage=Cpp", 
-                "-package", opt.namespace, 
-                "-o", opt.outdir,
+                "-package", gen_opt.namespace, 
+                "-o", gen_opt.outdir,
                 "-Xexact-output-dir", 
-                "-visitor",
+                gen_opt.visitor and "-visitor" or "-no-visitor",
+                gen_opt.listener and "-listener" or "-no-listener",
                 sourcefile,
             })
         batchcmds:add_depfiles(sourcefile)
@@ -50,10 +64,12 @@ rule("antlr4")
 
             -- add deps
             batchcmds:set_depmtime(os.mtime(objectfile))
+            batchcmds:add_depfiles(sourcefile_cx)
             batchcmds:set_depcache(target:dependfile(objectfile))
         end
     end)
+rule_end()
 
 add_plugindirs(path.join(os.projectdir(), "plugins"))
 
-includes("test")
+includes("*/xmake.lua")
