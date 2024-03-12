@@ -1,5 +1,6 @@
-add_repositories("my-repo 3rd")
+set_languages("c++23")
 
+add_repositories("my-repo 3rd")
 add_requires("antlr4")
 
 rule("antlr4")
@@ -9,6 +10,14 @@ rule("antlr4")
         target:set("policy", "build.across_targets_in_parallel", false)
     end)
     before_buildcmd_file(function (target, batchcmds, sourcefile, opt)
+        -- https://xmake.io/#/zh-cn/manual/extension_modules?id=detectfind_program
+        -- antlr has no --version/--help
+        import("lib.detect.find_program")
+        local antlr_checker = function (program) os.run("%s", program) end
+        local antlr = assert(find_program("antlr",{check=antlr_checker}) 
+                                or find_program("antlr4",{check=antlr_checker}), 
+                             "antlr not found!")
+        
         local basename = path.basename(sourcefile)
         local basedir = path.directory(sourcefile)
         -- 优先使用前缀，方便ignore
@@ -40,7 +49,7 @@ rule("antlr4")
         end
         
         batchcmds:show_progress(opt.progress, "${color.build.object}antlr4 %s", sourcefile)
-        batchcmds:execv("antlr4", {
+        batchcmds:vrunv(antlr.program, {
                 "-Dlanguage=Cpp", 
                 "-package", gen_opt.namespace, 
                 "-o", gen_opt.outdir,
