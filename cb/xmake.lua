@@ -1,0 +1,10 @@
+target("libcb")
+    set_kind("static")
+    add_files("cb.g4")
+    add_rules("antlr4")
+    add_packages("antlr4", {public = true})
+
+target("cb")
+    set_kind("binary")
+    add_files("main.cc")
+    add_deps("libcb")

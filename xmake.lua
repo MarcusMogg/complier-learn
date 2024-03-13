@@ -49,7 +49,7 @@ rule("antlr4")
         end
         
         batchcmds:show_progress(opt.progress, "${color.build.object}antlr4 %s", sourcefile)
-        batchcmds:vrunv(antlr.program, {
+        batchcmds:vrunv(antlr, {
                 "-Dlanguage=Cpp", 
                 "-package", gen_opt.namespace, 
                 "-o", gen_opt.outdir,
